@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "xutility": "c",
+        "sstream": "c",
+        "istream": "c",
+        "memory": "c",
+        "type_traits": "c",
+        "utility": "c",
+        "xlocnum": "c"
+    }
+}

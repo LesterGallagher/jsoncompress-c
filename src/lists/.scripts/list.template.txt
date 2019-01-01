@@ -1,0 +1,40 @@
+#include <stdlib.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdio.h>
+#include "${typeHyphen}-list.h"
+
+${typeUnderscore}_list_t *${typeUnderscore}_list_new(unsigned int initialLength) {
+    ${typeUnderscore}_list_t *list = (${typeUnderscore}_list_t*)malloc(sizeof(${typeUnderscore}_list_t));
+    list->array = (${innerType}*)malloc(sizeof(${innerType}) * initialLength);
+    list->allocated = initialLength;
+    list->count = 0;
+    return list;
+}
+
+void ${typeUnderscore}_list_free(${typeUnderscore}_list_t *list) {
+    free(list->array);
+    free(list);
+}
+
+void ${typeUnderscore}_list_add(${typeUnderscore}_list_t *self, ${innerType} value) {
+    if (self->count >= self->allocated) {
+        self->allocated *= 2;
+        self->array = realloc(self->array, sizeof(${innerType}) * self->allocated);
+    }
+    self->array[self->count++] = value;
+}
+
+${innerType} ${typeUnderscore}_list_at_index(${typeUnderscore}_list_t *self, unsigned int index) {
+    return self->array[index];
+}
+
+void ${typeUnderscore}_list_trim(${typeUnderscore}_list_t *self) {
+    if (self->allocated == self->count) return;
+    self->allocated = self->count;
+    self->array = realloc(self->array, sizeof(${innerType}) * self->allocated);
+}
+
+
+
+

@@ -1,0 +1,25 @@
+#ifndef __${typeUpcase}_LIST_H__
+#define __${typeUpcase}_LIST_H__
+
+#include <stdlib.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+typedef struct ${typeUnderscore}_list {
+    unsigned int allocated;
+    unsigned int count;
+    ${innerType} *array;
+} ${typeUnderscore}_list_t;
+
+${typeUnderscore}_list_t *${typeUnderscore}_list_new(unsigned int initialLength);
+
+void ${typeUnderscore}_list_free(${typeUnderscore}_list_t *list);
+
+void ${typeUnderscore}_list_add(${typeUnderscore}_list_t *self, ${innerType} value);
+
+${innerType} ${typeUnderscore}_list_at_index(${typeUnderscore}_list_t *self, unsigned int index);
+
+void ${typeUnderscore}_list_trim(${typeUnderscore}_list_t *self);
+
+#endif
+

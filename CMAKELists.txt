@@ -1,0 +1,19 @@
+cmake_minimum_required (VERSION 2.6)
+project (jsoncompress)
+
+FIND_PACKAGE(PkgConfig REQUIRED)
+
+add_definitions(-D_DEBUG)
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -pedantic -fprofile-arcs -ftest-coverage -g -O0")
+set(CMAKE_C_STANDARD 99)
+
+set(CMAKE_SOURCES src/main.c)
+set(CMAKE_SOURCES ${CMAKE_SOURCES} src/parse-json/json-parser.c src/parse-json/helpers.c src/parse-json/stringbuilder.c src/parse-json/json-node-ptr-list.c)
+set(CMAKE_SOURCES ${CMAKE_SOURCES} src/json-compress/json-compress.c src/json-compress/json-decompress.c)
+#set(CMAKE_SOURCES ${CMAKE_SOURCES} src/lists/char-ptr-list.c)
+set(CMAKE_SOURCES ${CMAKE_SOURCES} src/CMemLeak.c)
+
+add_executable(jsoncompress ${CMAKE_SOURCES})
+
+target_link_libraries(jsoncompress libintl)

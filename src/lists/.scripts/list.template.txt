@@ -35,6 +35,33 @@ void ${typeUnderscore}_list_trim(${typeUnderscore}_list_t *self) {
     self->array = realloc(self->array, sizeof(${innerType}) * self->allocated);
 }
 
+void ${typeUnderscore}_list_trim(${typeUnderscore}_list_t *self) {
+    if (self->allocated == self->count) return;
+    self->allocated = self->count;
+    self->array = realloc(self->array, sizeof(${typeUnderscore}) * self->allocated);
+}
 
+${typeUnderscore}_list_t *${typeUnderscore}_list_clone(${typeUnderscore}_list_t *self) {
+    ${typeUnderscore}_list_t *new = ${typeUnderscore}_list_new(self->count);
+    new->count = self->count;
+    new->allocated = self->count;
+    new->offset = 0;
+    memcpy(
+        new->array, 
+        self->array, 
+        self->count * sizeof(${typeUnderscore}));
+    return new;
+}
+
+void ${typeUnderscore}_list_sort(${typeUnderscore}_list_t *self, ${typeUnderscore}_list_sort_cb_t sort_cb) {
+    int (*func_ptr)(const void*, const void*);
+    func_ptr = (int (*)(const void*, const void*))sort_cb;
+
+    qsort(
+        self->array + self->offset * sizeof(${typeUnderscore}), 
+        self->count, 
+        sizeof(${typeUnderscore}), 
+        func_ptr);
+}
 
 

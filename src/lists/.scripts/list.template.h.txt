@@ -21,5 +21,13 @@ ${innerType} ${typeUnderscore}_list_at_index(${typeUnderscore}_list_t *self, uns
 
 void ${typeUnderscore}_list_trim(${typeUnderscore}_list_t *self);
 
+void ${typeUnderscore}_list_trim(${typeUnderscore}_list_t *self);
+
+${typeUnderscore}_list_t *${typeUnderscore}_list_clone(${typeUnderscore}_list_t *self);
+
+void ${typeUnderscore}_list_sort(${typeUnderscore}_list_t *self, ${typeUnderscore}_list_sort_cb_t sort_cb);
+
+typedef int ${typeUnderscore}_list_sort_cb_t(${innerType} *a, ${innerType} *b);
+
 #endif
 

@@ -20,6 +20,8 @@ char* json_get_type_name(json_type type);
 
 bool json_verify_integrity(json_node_t *node);
 
+json_node_t *json_node_new(json_type type, char *key, json_node_t *parent);
+
 #endif
 
 

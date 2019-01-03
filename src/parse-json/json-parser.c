@@ -1,11 +1,11 @@
-#include "json-parser.h"
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>
-#include "../CMemLeak.h"
-#include "stringbuilder.h"
 #include <math.h>
+#include "json-parser.h"
+#include "../CMemLeak.h"
+#include "helpers.h"
 
 typedef enum { WAITFORKEY, BEFOREVALUEWRITE, AFTERVALUEWRITE } writing_state;
 typedef enum { WM_INITIAL, WM_JSON_OBJECT, WM_JSON_ARRAY } writing_mode;
@@ -22,46 +22,9 @@ char *substring(const char *str, size_t begin, size_t len) {
     return subbuff;
 }
 
-unsigned short str_slice_eq(const char *str, size_t begin, size_t len, const char *target) {
-    char* sub = substring(str, begin, len);
-    int r = strcmp(sub, target);
-    free(sub);
-    return r == 0;
-}
-
-void init_node_value(json_node_t *json_node) {
-    switch(json_node->type) {
-        case JSON_ARRAY:
-        case JSON_OBJECT:
-        json_node->value.nodes_val = json_node_ptr_list_new(8);
-        break;
-
-        // // todo: The following case statements don't require initializations. You might as well remove them.
-        // case JSON_BOOL:
-        // json_node->value.bool_val = false;
-        // break;
-        // case JSON_NULL:
-        // // value is not set
-        // memcpy(json_node, "\0\0\0\0\0\0\0\0\0\0\0", sizeof(json_value_t)); // todo: the user should not access this field. So it doesn't really have to be set to a bunch of nulls but we'll do it anyway.
-        // break;  
-        // case JSON_NUMBER:
-        // json_node->value.num_val = 0;
-        // break;
-        // case JSON_STRING:
-        // json_node->value.string_val = NULL;
-        // break;
-    }
-}
-
-json_node_t *create_key_value_node(json_type type, writing_mode mode, char *key, json_node_t *curr) {
-    json_node_t *new_node = malloc(sizeof(json_node_t));
-    new_node->type = type;
-    if (mode == WM_JSON_ARRAY) sprintf(key, "%u", curr->value.nodes_val->count);
-    new_node->key = malloc(strlen(key) + 1);
-    strcpy(new_node->key, key);
-    new_node->parent = curr;
-    init_node_value(new_node);
-    return new_node;
+bool str_slice_eq(const char* src, size_t begin, size_t len, const char* test) {
+    for(unsigned int i = 0; i < len; i++) if (src[i + begin] != test[i]) return false;
+    return true;
 }
 
 json_node_t *json_parse(char *json_buf) {
@@ -77,7 +40,10 @@ json_node_t *json_parse(char *json_buf) {
         s = json_buf[i];
         switch (ws) {
         case AFTERVALUEWRITE:
-            if (s == ',') ws = mode == WM_JSON_ARRAY ? BEFOREVALUEWRITE : WAITFORKEY;
+            if (s == ',') {
+                ws = mode == WM_JSON_ARRAY ? BEFOREVALUEWRITE : WAITFORKEY;
+                if (mode == WM_JSON_ARRAY) sprintf(key, "%u", curr->value.nodes_val->count); 
+            }
             else if (s == '}' || s == ']') {
                 if (mode == WM_JSON_ARRAY && s == '}') return parse_err("syntax error character '%c'(#%i): expected ']'", s, i);
                 else if (mode == WM_JSON_OBJECT && s == ']') return parse_err("syntax error character '%c'(#%i): expected '}'", s, i);
@@ -94,11 +60,12 @@ json_node_t *json_parse(char *json_buf) {
             if (s == '"') {
                 s = json_buf[++i];
                 unsigned int start = i;
-                while (json_buf[i] != '"' || (i && json_buf[i - 1] == '\\'))
+                while (json_buf[i] != '"' || (i && json_buf[i - 1] == '\\')) {
                     if (++i >= len) return parse_err("Syntax error: Unexpected end of string, expected a character in a string value", '\0', 0);
+                }
                 s = json_buf[i];
                 char *val = substring(json_buf, start, i - start);
-                json_node_t *str_node = create_key_value_node(JSON_STRING, mode, key, curr);
+                json_node_t *str_node = json_node_new(JSON_STRING, key, curr);
                 str_node->value.string_val = val;
                 if(curr != NULL) json_node_ptr_list_add(curr->value.nodes_val, str_node);
                 else curr = str_node;
@@ -111,7 +78,7 @@ json_node_t *json_parse(char *json_buf) {
                     else s = json_buf[i];
                 }
                 char *strval = substring(json_buf, start, --i - start + 1);
-                json_node_t *num_node = create_key_value_node(JSON_NUMBER, mode, key, curr);
+                json_node_t *num_node = json_node_new(JSON_NUMBER, key, curr);
                 num_node->value.num_val = strtod(strval, NULL);
                 free(strval);
                 if (curr != NULL) json_node_ptr_list_add(curr->value.nodes_val, num_node);
@@ -119,7 +86,7 @@ json_node_t *json_parse(char *json_buf) {
                 ws = AFTERVALUEWRITE;
             }
             else if ((i + 4) <= len && str_slice_eq(json_buf, i, 4, "true")) {
-                json_node_t *bool_node = create_key_value_node(JSON_BOOL, mode, key, curr);
+                json_node_t *bool_node = json_node_new(JSON_BOOL, key, curr);
                 bool_node->value.bool_val = true;
                 i = i + 3;
                 if (curr != NULL) json_node_ptr_list_add(curr->value.nodes_val, bool_node);
@@ -127,31 +94,31 @@ json_node_t *json_parse(char *json_buf) {
                 ws = AFTERVALUEWRITE;
             }
             else if ((i + 5) <= len && str_slice_eq(json_buf, i, 5, "false")) {
-                json_node_t *bool_node = create_key_value_node(JSON_BOOL, mode, key, curr);
+                json_node_t *bool_node = json_node_new(JSON_BOOL, key, curr);
                 bool_node->value.bool_val = 0;
                 i = i + 4;
                 if (curr != NULL) json_node_ptr_list_add(curr->value.nodes_val, bool_node);
                 else curr = bool_node;
                 ws = AFTERVALUEWRITE;
             } else if ((i + 4) <= len && str_slice_eq(json_buf, i, 4, "null")) { // value is null
-                json_node_t *null_node = create_key_value_node(JSON_NULL, mode, key, curr);
-                // memcpy(&null_node->value, "\0\0\0\0\0\0\0\0\0\0\0", sizeof(json_value_t)); // todo: the user should not access this field. So it doesn't really have to be set to a bunch of nulls but we'll do it anyway.
+                json_node_t *null_node = json_node_new(JSON_NULL, key, curr);
                 i = i + 3;
                 if (curr != NULL) json_node_ptr_list_add(curr->value.nodes_val, null_node);
                 else curr = null_node;
                 ws = AFTERVALUEWRITE;
             } else if (s == '{') {
-                json_node_t *new_obj_node = create_key_value_node(JSON_OBJECT, mode, key, curr);
+                json_node_t *new_obj_node = json_node_new(JSON_OBJECT, key, curr);
                 if (curr != NULL) json_node_ptr_list_add(curr->value.nodes_val, new_obj_node);
                 curr = new_obj_node;
                 mode = WM_JSON_OBJECT;
                 ws = WAITFORKEY;
             } else if (s == '[') {
-                json_node_t *new_arr_node = create_key_value_node(JSON_ARRAY, mode, key, curr);
+                json_node_t *new_arr_node = json_node_new(JSON_ARRAY, key, curr);
                 if (curr != NULL) json_node_ptr_list_add(curr->value.nodes_val, new_arr_node);
                 curr = new_arr_node;
                 mode = WM_JSON_ARRAY;
                 ws = BEFOREVALUEWRITE;
+                sprintf(key, "%u", 0); 
             } else return parse_err("Syntax error: Unexpected character '%c'(#%i). expected a value", s, i);
             break;
         case WAITFORKEY:
@@ -184,6 +151,53 @@ json_node_t *json_parse(char *json_buf) {
     }
     if (curr != NULL && curr->parent == NULL) return curr; // todo: this json string holds a single value
     return parse_err("syntax error", '\0', 0);
+}
+
+typedef struct stringbuilder {
+    unsigned int allocated;
+    unsigned int length;
+    char *array;
+} stringbuilder_t;
+
+stringbuilder_t *stringbuilder_new(unsigned int initialLength) {
+    stringbuilder_t *self = (stringbuilder_t*)malloc(sizeof(stringbuilder_t));
+    self->array = (char*)malloc(sizeof(char) * initialLength + 1);
+    self->allocated = initialLength + 1;
+    self->length = 0;
+    self->array[0] = '\0';
+    return self;
+}
+
+void stringbuilder_free(stringbuilder_t *self) {
+    free(self->array);
+    free(self);
+}
+
+void stringbuilder_concat(stringbuilder_t *self, char *str, unsigned int len) {
+    while (self->length + (len + 1) >= self->allocated) {
+        self->allocated *= 2;
+        self->array = realloc(self->array, sizeof(char) * self->allocated);
+    }
+    memcpy(self->array + self->length * sizeof(char), str, (len + 1) * sizeof(char));
+    self->length += len;
+}
+
+void stringbuilder_add(stringbuilder_t *self, char value) {
+    if (self->length + 1 >= self->allocated) {
+        self->array = realloc(self->array, sizeof(char) * self->allocated * 2);
+    }
+    self->array[self->length++] = value;
+    self->array[self->length] = '\0';
+}
+
+char stringbuilder_at_index(stringbuilder_t *self, unsigned int index) {
+    return self->array[index];
+}
+
+void stringbuilder_trim(stringbuilder_t *self) {
+    if (self->allocated == self->length) return;
+    self->allocated = self->length;
+    self->array = realloc(self->array, self->allocated);
 }
 
 void json_stringify_rec(json_node_t *json_node, stringbuilder_t *stringbuilder) {

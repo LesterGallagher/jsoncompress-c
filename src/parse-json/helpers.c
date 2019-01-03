@@ -182,8 +182,12 @@ int json_free(json_node_t *node) {
     return 0;
 }
 
-json_node_t *json_node_new() {
-    
+json_node_t *json_node_new(json_type type, char *key, json_node_t *parent) {
+    json_node_t *new_node = malloc(sizeof(json_node_t));
+    new_node->type = type;
+    new_node->key = strdup(key);
+    new_node->parent = parent;
+    if (type == JSON_OBJECT || type == JSON_ARRAY) new_node->value.nodes_val = json_node_ptr_list_new(8);
+    return new_node;
 }
-
 

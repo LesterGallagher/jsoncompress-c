@@ -9,7 +9,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -pedantic -fprofile-arcs -ftes
 set(CMAKE_C_STANDARD 99)
 
 set(CMAKE_SOURCES src/main.c)
-set(CMAKE_SOURCES ${CMAKE_SOURCES} src/parse-json/json-parser.c src/parse-json/helpers.c src/parse-json/stringbuilder.c src/parse-json/json-node-ptr-list.c)
+set(CMAKE_SOURCES ${CMAKE_SOURCES} src/parse-json/json-parser.c src/parse-json/helpers.c src/parse-json/json-node-ptr-list.c)
 set(CMAKE_SOURCES ${CMAKE_SOURCES} src/json-compress/json-compress.c src/json-compress/json-decompress.c)
 #set(CMAKE_SOURCES ${CMAKE_SOURCES} src/lists/char-ptr-list.c)
 set(CMAKE_SOURCES ${CMAKE_SOURCES} src/CMemLeak.c)

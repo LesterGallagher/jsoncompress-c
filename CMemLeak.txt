@@ -1,6 +1,6 @@
 
 Final Report
-Total allocations    : 347
-Max memory allocation: 7973 (7K)
+Total allocations    : 266
+Max memory allocation: 7859 (7K)
 Total leak           : 0
 

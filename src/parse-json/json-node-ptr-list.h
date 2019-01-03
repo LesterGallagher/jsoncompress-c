@@ -15,8 +15,6 @@ typedef struct json_node_ptr_list {
 
 typedef int json_node_ptr_list_sort_cb_t(const json_node_t **a, const json_node_t **b);
 
-typedef int sort_func_t(const void* a, const void* b);
-
 typedef int cb(const void*, const void*);
 
 json_node_ptr_list_t *json_node_ptr_list_new(unsigned int initialLength);

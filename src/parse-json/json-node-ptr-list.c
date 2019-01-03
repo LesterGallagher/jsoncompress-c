@@ -58,8 +58,5 @@ void json_node_ptr_list_sort(json_node_ptr_list_t *self, json_node_ptr_list_sort
         self->count, 
         sizeof(json_node_t*), 
         func_ptr);
-
-    // qsort(schema_keys, properties->val_len, json_value_size, sort);
 }
-
 
